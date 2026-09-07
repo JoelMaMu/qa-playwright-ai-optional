@@ -1,0 +1,76 @@
+{
+  "$comment": [
+    "CLIENT-side MCP configuration. Copy into your assistant's config.",
+    "",
+    "The point of this file: `browser_run_code_unsafe` ships in the DEFAULT tool set",
+    "of @playwright/mcp 0.0.80, under 'Core automation', with no capability to enable.",
+    "Its own description reads: 'Unsafe: executes arbitrary JavaScript in the",
+    "Playwright server process and is RCE-equivalent.'",
+    "",
+    "And the server offers NO command-line option to exclude an individual tool:",
+    "`--caps` only ADDS capabilities. Reducing the tool surface is therefore the",
+    "CLIENT's responsibility, through the `tools` allowlist below. Hardening the",
+    "server does not remove the tool.",
+    "",
+    "Before using this file, create ai/policy/secrets.env from secrets.env.example,",
+    "start the SUT so the qa-ai-optional-sut-internal network exists, and replace",
+    "ABSOLUTE_PATH_TO_REPO below: bind mounts are resolved against the MCP client's",
+    "working directory, which is not necessarily the repository root.",
+    "",
+    "Verified 2026-09-07 against @playwright/mcp 0.0.80. Re-check on every upgrade:",
+    "the default tool set is an implementation detail."
+  ],
+
+  "mcpServers": {
+    "playwright": {
+      "type": "local",
+      "command": "docker",
+      "args": [
+        "run", "--rm", "-i",
+        "--user", "1000:1000",
+        "--read-only",
+        "--security-opt", "no-new-privileges:true",
+        "--cap-drop", "ALL",
+        "--tmpfs", "/tmp",
+        "--network", "qa-ai-optional-sut-internal",
+        "--volume", "ABSOLUTE_PATH_TO_REPO/tests:/workspace/tests:ro",
+        "--volume", "ABSOLUTE_PATH_TO_REPO/ai/policy/secrets.env:/policy/secrets.env:ro",
+        "mcr.microsoft.com/playwright/mcp:v0.0.80",
+        "--headless",
+        "--isolated",
+        "--secrets=/policy/secrets.env",
+        "--console-level=error",
+        "--allowed-origins=http://juice-shop:3000;http://localhost:3000",
+        "--blocked-origins=*"
+      ],
+
+      "$comment_tools": [
+        "EXPLICIT allowlist. Any tool absent from this list is unavailable.",
+        "A denylist would be wrong by construction: a tool added by a future version",
+        "would arrive enabled. Here it arrives disabled.",
+        "",
+        "Deliberate exclusions:",
+        "  browser_run_code_unsafe  RCE-equivalent, enabled by default",
+        "  browser_file_upload      filesystem read path",
+        "  browser_install          writes outside the read-only mounts"
+      ],
+      "tools": [
+        "browser_navigate",
+        "browser_navigate_back",
+        "browser_snapshot",
+        "browser_click",
+        "browser_type",
+        "browser_fill_form",
+        "browser_select_option",
+        "browser_press_key",
+        "browser_hover",
+        "browser_wait_for",
+        "browser_console_messages",
+        "browser_network_requests",
+        "browser_take_screenshot",
+        "browser_tabs",
+        "browser_close"
+      ]
+    }
+  }
+}
