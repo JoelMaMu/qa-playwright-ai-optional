@@ -1,0 +1,34 @@
+{
+  "name": "qa-playwright-ai-optional",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A Playwright suite where AI is a source-time tool, never a runtime dependency.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "sut:up": "docker compose -f sut/docker/compose.yaml up -d --wait",
+    "sut:down": "docker compose -f sut/docker/compose.yaml down -v",
+    "sut:seed": "node sut/seed/seed.mjs",
+    "test": "playwright test --project=chromium",
+    "test:all-browsers": "playwright test",
+    "test:smoke": "playwright test --project=chromium tests/specs/smoke",
+    "test:security": "playwright test --project=chromium tests/specs/security",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit",
+    "lint:unicode": "node tools/invisible-unicode-lint/bin/cli.mjs .",
+    "gate:healer": "node tools/healer-diff-gate/bin/cli.mjs --base origin/main",
+    "verify:no-ai": "node scripts/assert-no-ai-imports.mjs",
+    "test:unit": "node --test tools/**/__tests__/*.test.mjs ai/policy/__tests__/*.test.mjs",
+    "metrics:mutants": "node metrics/harness/run-mutants.mjs",
+    "mcp:up": "docker compose -f ai/policy/mcp-compose.yaml up"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "@types/node": "22.18.1",
+    "typescript": "5.9.2"
+  }
+}
