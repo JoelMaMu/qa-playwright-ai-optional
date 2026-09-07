@@ -1,0 +1,71 @@
+# SUT: OWASP Juice Shop, deliberately vulnerable by design.
+#
+# Never expose this container on an interface other than the loopback. The
+# `127.0.0.1:` binding below is part of the threat model, not a preference.
+
+name: qa-ai-optional-sut
+
+services:
+  juice-shop:
+    # Pinned by digest, not by tag: a tag is mutable, a digest is not. Same
+    # reasoning as SHA-pinning GitHub Actions.
+    image: bkimminich/juice-shop:v20.2.0@sha256:8739101ade29358abb5469ee66ae78e582c97ed0a5543a4ad102e5fa5193526b
+    container_name: qa-ai-optional-juice-shop
+
+    ports:
+      - '127.0.0.1:3000:3000'
+
+    environment:
+      NODE_ENV: unsafe # disables Juice Shop anti-tampering
+      TZ: Europe/Paris # must match timezoneId in playwright.config.ts
+
+    read_only: false # Juice Shop writes to /juice-shop/ftp on startup
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp
+
+    healthcheck:
+      # Juice Shop takes 15 to 40 s to boot. Without a healthcheck the first spec
+      # fails on ECONNREFUSED and Playwright gets the blame.
+      # The image is DISTROLESS: no wget, no curl, no shell. Only node exists, and
+      # it is not on the PATH of `exec`, hence the absolute path.
+      test:
+        - CMD
+        - /nodejs/bin/node
+        - -e
+        - |
+          fetch('http://127.0.0.1:3000/rest/admin/application-version')
+            .then((r) => process.exit(r.ok ? 0 : 1))
+            .catch(() => process.exit(1));
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+
+    networks:
+      - sut-published
+      - sut-internal
+
+networks:
+  # Two networks, for a structural reason.
+  #
+  # A Docker bridge network always gives its containers a route out. Attaching the
+  # MCP server to one would grant it full internet access whatever --allowed-origins
+  # says, and upstream states those flags are not a security boundary.
+  #
+  # Only `internal: true` actually removes the outbound route, but an internal
+  # network cannot publish ports, and the SUT must stay reachable on 127.0.0.1:3000.
+  #
+  # Hence the split: the SUT sits on both, the MCP server only on sut-internal. It
+  # reaches the SUT and nothing else.
+  sut-published:
+    name: qa-ai-optional-sut-published
+    driver: bridge
+
+  sut-internal:
+    name: qa-ai-optional-sut-internal
+    driver: bridge
+    internal: true
