@@ -1,0 +1,105 @@
+# Deterministic pipeline. No model, no MCP server, no provider secret.
+# ADR-0002: CI is an oracle. Same commit, same result.
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Minimal permissions. A repository default of write-all hands a compromised
+# runner a write token on the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PLAYWRIGHT_BROWSERS_PATH: /opt/ms-playwright
+
+jobs:
+  static:
+    name: static checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # Actions are pinned to a COMMIT SHA, never to a tag. A tag is mutable: in
+      # March 2026 the Trivy supply-chain incident (CVE-2026-33634) force-pushed
+      # 83 version tags across two popular actions. `@v0.34.2` would have followed
+      # the malicious code. A SHA does not.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # --ignore-scripts neutralises npm lifecycle scripts, the main vector for
+      # malicious packages. Note that `binding.gyp` runs outside the npm lifecycle
+      # and bypasses this flag: it reduces the surface, it does not close it.
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Generation / execution boundary
+        run: npm run verify:no-ai
+
+      - name: Invisible characters in assistant-read files
+        run: npm run lint:unicode
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests (tools and policy)
+        run: npm run test:unit
+
+  e2e:
+    name: end-to-end
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    needs: static
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install browsers
+        run: npx --no-install playwright install --with-deps chromium
+
+      - name: Start the SUT
+        run: npm run sut:up && npm run sut:seed
+
+      - name: Run the suite
+        env:
+          SUT_EXTERNAL: '1' # the SUT is already up, Playwright must not restart it
+        run: npm test
+
+      - name: Upload report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          # Short retention: traces and videos embed full DOM snapshots. The SUT is
+          # synthetic here, so they are publishable. On a real application this line
+          # would be an exfiltration channel.
+          retention-days: 7
+
+      - name: Stop the SUT
+        if: always()
+        run: npm run sut:down

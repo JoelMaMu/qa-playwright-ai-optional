@@ -1,0 +1,100 @@
+# Proof, not promise.
+#
+# "We never call a model" is easy to claim. This workflow proves it: the suite runs
+# under a dedicated user whose outbound traffic is rejected everywhere except the
+# loopback and the Docker network, and the job fails if a single connection is
+# attempted.
+
+name: airgap proof
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # Shared location, readable by the unprivileged runner user below. The default
+  # (~/.cache/ms-playwright) belongs to `runner` and would be unreachable.
+  PLAYWRIGHT_BROWSERS_PATH: /opt/ms-playwright
+
+jobs:
+  airgap:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install browsers
+        run: |
+          sudo mkdir -p "$PLAYWRIGHT_BROWSERS_PATH"
+          sudo chmod 0755 "$PLAYWRIGHT_BROWSERS_PATH"
+          npx --no-install playwright install --with-deps chromium
+          sudo chmod -R a+rX "$PLAYWRIGHT_BROWSERS_PATH"
+
+      - name: Check 1, the generation / execution boundary holds
+        run: npm run verify:no-ai
+
+      - name: Check 2, ai/ is genuinely removable
+        run: |
+          set -euo pipefail
+          rm -rf ai/
+          npm run typecheck
+          npx --no-install playwright test --list --project=chromium | tail -3
+          git checkout -- ai/
+
+      - name: Start the SUT
+        run: npm run sut:up && npm run sut:seed
+
+      - name: Check 3, the suite runs with no egress
+        env:
+          SUT_EXTERNAL: '1'
+        run: |
+          set -euo pipefail
+
+          sudo useradd --create-home airgapped
+
+          # The suite writes reports and artifacts into the workspace.
+          sudo chmod -R a+rwX "$GITHUB_WORKSPACE"
+
+          # Outbound rules applied to that user only. Allowed: loopback (the SUT)
+          # and the Docker bridge range. Everything else is logged, then rejected.
+          sudo iptables -A OUTPUT -m owner --uid-owner airgapped -o lo -j ACCEPT
+          sudo iptables -A OUTPUT -m owner --uid-owner airgapped -d 172.16.0.0/12 -j ACCEPT
+          sudo iptables -A OUTPUT -m owner --uid-owner airgapped \
+            -j LOG --log-prefix 'AIRGAP-VIOLATION: '
+          sudo iptables -A OUTPUT -m owner --uid-owner airgapped -j REJECT
+
+          sudo -u airgapped \
+            env "PATH=$PATH" \
+                "PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH" \
+                "SUT_EXTERNAL=1" \
+            npx --no-install playwright test --project=chromium
+
+      - name: Check 4, no egress violation was logged
+        if: ${{ !cancelled() }}
+        run: |
+          if sudo dmesg | grep -q 'AIRGAP-VIOLATION'; then
+            echo "FAILED: outbound connections were attempted during the suite."
+            sudo dmesg | grep 'AIRGAP-VIOLATION'
+            exit 1
+          fi
+          echo "OK: no outbound connection attempted during the suite."
+
+      - name: Stop the SUT
+        if: always()
+        run: npm run sut:down
