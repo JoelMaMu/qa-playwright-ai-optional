@@ -41,8 +41,12 @@ jobs:
 
       - name: Install browsers
         run: |
+          set -euo pipefail
+          # Owned by the installing user, then made world-readable. Creating it as
+          # root and installing as the runner fails on EACCES; the airgapped user
+          # further down only ever needs to read it.
           sudo mkdir -p "$PLAYWRIGHT_BROWSERS_PATH"
-          sudo chmod 0755 "$PLAYWRIGHT_BROWSERS_PATH"
+          sudo chown "$(id -u):$(id -g)" "$PLAYWRIGHT_BROWSERS_PATH"
           npx --no-install playwright install --with-deps chromium
           sudo chmod -R a+rX "$PLAYWRIGHT_BROWSERS_PATH"
 
