@@ -83,17 +83,26 @@ jobs:
             -j LOG --log-prefix 'AIRGAP-VIOLATION: '
           sudo iptables -A OUTPUT -m owner --uid-owner airgapped -j REJECT
 
-          # The local binary directly, never npx. Even with --no-install, npx
-          # resolves the package spec against registry.npmjs.org, and the
-          # airgapped user has no npm cache in its own HOME. The first run of
-          # this job caught exactly that: 24 rejected connections to Cloudflare
-          # addresses, all of them npm, none of them the suite. An air-gapped
-          # step must not go through a package manager.
+          # The package entry point, by absolute path, never npx and never the
+          # .bin symlink. Two reasons, both found by running this job for real:
+          #
+          #   npx resolves the package spec against registry.npmjs.org even with
+          #   --no-install, and the airgapped user has no npm cache under its own
+          #   HOME. That produced 24 rejected outbound connections, all of them
+          #   npm, none of them the suite.
+          #
+          #   node then failed to load node_modules/.bin/playwright, which is a
+          #   symlink. Naming the real file removes the indirection.
+          #
+          # An air-gapped step must not go through a package manager.
+          CLI="$GITHUB_WORKSPACE/node_modules/@playwright/test/cli.js"
+          test -f "$CLI" || { echo "Playwright CLI not found at $CLI"; exit 1; }
+
           sudo -u airgapped \
             env "PATH=$PATH" \
                 "PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH" \
                 "SUT_EXTERNAL=1" \
-            node_modules/.bin/playwright test --project=chromium
+            node "$CLI" test --project=chromium
 
       - name: Check 4, no egress violation was logged
         if: ${{ !cancelled() }}
