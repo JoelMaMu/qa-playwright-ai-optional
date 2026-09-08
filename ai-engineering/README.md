@@ -14,7 +14,7 @@ rm -rf ai-engineering/ && npm test   # must produce the same result
 ## Why the boundary
 
 Generation modifies source code. Execution verifies it. The two never share a
-runtime ([ADR-0001](../adr/0001-ai-as-a-removable-layer.md)).
+runtime ([ADR-0001](../architecture-decisions/0001-ai-as-a-removable-layer.md)).
 
 A model in the execution loop makes a test non-deterministic, its cost variable,
 its reproducibility dependent on a third party. Above all, a failure no longer
@@ -54,7 +54,7 @@ boundary and does not affect redirects"*. The real barrier is the `internal: tru
 container network.
 
 **3. `--secrets` is, in upstream's words, "a convenience and not a security
-feature".** It is barrier 3 of [ADR-0003](../adr/0003-synthetic-data-only.md),
+feature".** It is barrier 3 of [ADR-0003](../architecture-decisions/0003-synthetic-data-only.md),
 never barrier 1. Barrier 1 is that the secret does not exist.
 
 Details and sources: [`ai-engineering/threat-model.md`](threat-model.md).

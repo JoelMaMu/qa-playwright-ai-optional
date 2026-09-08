@@ -31,7 +31,7 @@ Concretely:
 1. `qa-automation/tests/` contains no import from `ai-engineering/`, no network call to a model provider,
    and no model-related environment variable.
 2. Deleting `ai-engineering/` entirely must leave the suite working and produce an identical
-   result. Checked by `scripts/assert-no-ai-imports.mjs`.
+   result. Checked by `ai-engineering/assert-no-ai-imports.mjs`.
 3. No Playwright configuration branches on the presence of AI tooling.
 
 ## Consequences

@@ -80,4 +80,4 @@ agent does. AI does not create this risk, it multiplies its throughput. The gate
 adoptable by a team using no model at all.
 
 The decision behind it is
-[ADR-0004](../../../adr/0004-healer-patch-review-policy.md).
+[ADR-0004](../../../architecture-decisions/0004-healer-patch-review-policy.md).

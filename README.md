@@ -48,7 +48,7 @@ Consequences, enforced rather than stated:
 
 | Rule | Enforced by |
 |---|---|
-| CI never calls a model, never starts an MCP server | `scripts/assert-no-ai-imports.mjs`, on every PR |
+| CI never calls a model, never starts an MCP server | `ai-engineering/assert-no-ai-imports.mjs`, on every PR |
 | Nothing leaves the SUT during a run | the egress guard, plus iptables in `airgap.yml` |
 | Generated patches cannot silently weaken the suite | `qa-automation/tools/healer-diff-gate/` |
 | Test data is synthetic and seeded | `qa-automation/sut/seed/`, ADR-0003 |
@@ -114,13 +114,14 @@ npm run typecheck
 ## Layout
 
 ```
-ai-adoption/       choose a posture: decision tree, four profiles, reusable policy
-ai-engineering/    the removable layer: MCP hardening, prompts, threat model
-                   plus invisible-unicode-lint
-qa-automation/     the suite, the pinned SUT, the false-green harness
-                   plus healer-diff-gate
-adr/               the four architecture decisions
-scripts/           the static proof that the boundary holds
+ai-adoption/              choose a posture: decision tree, four profiles,
+                          reusable internal policy
+ai-engineering/           the removable layer: MCP hardening, prompts, threat
+                          model, invisible-unicode-lint, and the static proof
+                          that the boundary holds
+qa-automation/            the suite, the pinned SUT, the false-green harness,
+                          and healer-diff-gate
+architecture-decisions/   the four decisions, in MADR format
 ```
 
 The posture is documentation and configuration, never a directory of tests. Four

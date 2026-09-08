@@ -47,5 +47,5 @@ accepted: the delay is visible, a false green is not.
 
 ## Verification
 
-`scripts/assert-no-ai-imports.mjs` fails if a workflow file references a provider
+`ai-engineering/assert-no-ai-imports.mjs` fails if a workflow file references a provider
 endpoint, a provider secret, or an MCP server image.

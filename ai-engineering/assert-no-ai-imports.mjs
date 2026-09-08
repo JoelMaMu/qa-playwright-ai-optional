@@ -16,13 +16,30 @@
  * No dependencies: it must run even when `npm ci` has failed.
  */
 
+import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
-import { join, relative } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// fileURLToPath, not .pathname: the latter keeps percent-encoding, and a single
-// space in the checkout path is enough to break the script.
-const ROOT = fileURLToPath(new URL('..', import.meta.url));
+/**
+ * Found by walking up rather than by counting `..` segments: a relative depth
+ * breaks silently the day this file moves, and the check would then pass by
+ * scanning an empty tree, which is the worst possible failure for a guard.
+ *
+ * fileURLToPath, not `.pathname`: the latter keeps percent-encoding, and a single
+ * space in the checkout path is enough to break the resolution.
+ */
+function repositoryRoot() {
+  let dir = dirname(fileURLToPath(import.meta.url));
+  while (!existsSync(join(dir, 'playwright.config.ts'))) {
+    const parent = dirname(dir);
+    if (parent === dir) throw new Error('playwright.config.ts not found in any parent directory');
+    dir = parent;
+  }
+  return dir;
+}
+
+const ROOT = repositoryRoot();
 
 /** Execution scope: what runs when `playwright test` runs. */
 const RUNTIME_SCOPE = ['qa-automation/tests', 'qa-automation/sut'];
@@ -110,7 +127,7 @@ async function main() {
     console.error(`    rule    : ${v.rule}`);
     console.error(`    excerpt : ${v.excerpt}\n`);
   }
-  console.error('See adr/0001-ai-as-a-removable-layer.md and adr/0002-no-llm-in-ci.md');
+  console.error('See architecture-decisions/0001-ai-as-a-removable-layer.md and 0002-no-llm-in-ci.md');
   process.exit(1);
 }
 

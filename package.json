@@ -21,7 +21,7 @@
     "typecheck": "tsc --noEmit",
     "lint:unicode": "node ai-engineering/tools/invisible-unicode-lint/bin/cli.mjs .",
     "gate:healer": "node qa-automation/tools/healer-diff-gate/bin/cli.mjs --base origin/main",
-    "verify:no-ai": "node scripts/assert-no-ai-imports.mjs",
+    "verify:no-ai": "node ai-engineering/assert-no-ai-imports.mjs",
     "test:unit": "node --test qa-automation/tools/**/__tests__/*.test.mjs ai-engineering/tools/**/__tests__/*.test.mjs ai-engineering/policy/__tests__/*.test.mjs",
     "metrics:mutants": "node qa-automation/metrics/harness/run-mutants.mjs",
     "mcp:up": "docker compose -f ai-engineering/policy/mcp-compose.yaml up"

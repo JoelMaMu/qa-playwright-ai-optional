@@ -19,7 +19,7 @@ Does your test environment contain real data?
 ├── YES ──▶ PROFILE 0, and fix that first.
 │           No AI profile is acceptable while an agent can read those records.
 │           This is an environment problem, not a tooling problem.
-│           See adr/0003-synthetic-data-only.md
+│           See architecture-decisions/0003-synthetic-data-only.md
 │
 └── NO
     │
@@ -54,7 +54,7 @@ Does your test environment contain real data?
 
 **The "egress at execution" row is identical in all four columns.** That is the
 whole point, and it is enforced rather than claimed: see
-[ADR-0001](../adr/0001-ai-as-a-removable-layer.md).
+[ADR-0001](../architecture-decisions/0001-ai-as-a-removable-layer.md).
 
 Operational detail for each profile: [`ai/profiles/`](profiles/).
 
@@ -103,11 +103,11 @@ time**, and record the date.
 
 Whichever one you pick, these four stay identical:
 
-1. **CI never calls a model** ([ADR-0002](../adr/0002-no-llm-in-ci.md)).
+1. **CI never calls a model** ([ADR-0002](../architecture-decisions/0002-no-llm-in-ci.md)).
 2. **Every generated artifact goes through human review**, like a pull request
    from an external contributor.
 3. **Healer patches pass the gate**
-   ([ADR-0004](../adr/0004-healer-patch-review-policy.md)), because a skip is not
+   ([ADR-0004](../architecture-decisions/0004-healer-patch-review-policy.md)), because a skip is not
    a pass.
 4. **Agent configuration files are code**: versioned, reviewed, linted.
 
