@@ -19,11 +19,29 @@
  */
 
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MUTANTS } from '../../sut/mutants/catalogue.ts';
 
-const ROOT = fileURLToPath(new URL('../..', import.meta.url));
+/**
+ * Playwright must be spawned from the repository root, where its config lives.
+ * Found by walking up rather than by counting `..` segments: a relative depth
+ * silently breaks the day this file moves, and the symptom is unhelpful
+ * ("no projects available") rather than "wrong directory".
+ */
+function repositoryRoot() {
+  let dir = dirname(fileURLToPath(import.meta.url));
+  while (!existsSync(join(dir, 'playwright.config.ts'))) {
+    const parent = dirname(dir);
+    if (parent === dir) throw new Error('playwright.config.ts not found in any parent directory');
+    dir = parent;
+  }
+  return dir;
+}
+
+const ROOT = repositoryRoot();
 
 const selected = process.argv.slice(2);
 const catalogue = selected.length ? MUTANTS.filter((m) => selected.includes(m.id)) : MUTANTS;
@@ -93,4 +111,4 @@ await writeFile(
   new URL('../results/false-green.json', import.meta.url),
   `${JSON.stringify({ total: results.length, missed: missed.length, rate, results }, null, 2)}\n`,
 );
-console.log('\nReport written to metrics/results/false-green.json');
+console.log('\nReport written to qa-automation/metrics/results/false-green.json');

@@ -51,15 +51,24 @@ mutant without one is a **known** gap, which is better than an ignored one.
 
 ## Results
 
-Current measurement is committed in
-[`results/false-green.json`](results/false-green.json). It is versioned on purpose:
-it is a measurement, not a run artifact, and its history is the history of the
-suite's health.
+```
+mutants           : 6
+detected          : 4
+false-green rate  : 33.3 %
 
-Two mutants are undetected, and both correspond to tests that do not exist yet:
-`M-SESSION-005` (no spec asserts API-side access control) and `M-LATENCY-006` (the
-suite has no time budget). Published as is: writing those two tests is what will
-bring the rate down.
+undetected:
+  M-SESSION-005   API-side access control
+  M-LATENCY-006   time budget
+```
+
+Committed in [`results/false-green.json`](results/false-green.json), versioned on
+purpose: it is a measurement, not a run artifact, and its history is the history of
+the suite's health.
+
+Both undetected mutants correspond to tests that do not exist yet. No spec asserts
+API-side access control, and the suite has no time budget anywhere. Published as
+is: writing those two tests is what will bring the rate down, and until then the
+number is the honest one.
 
 ## A note on the instrument
 
