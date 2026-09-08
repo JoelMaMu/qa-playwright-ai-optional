@@ -25,13 +25,20 @@ disqualifies the approach for a regression suite.
 
 | Path | Role |
 |---|---|
+| `profiles/` | one file per AI posture: what you configure, what leaves the machine, what it costs |
 | `policy/mcp-client-allowlist.json` | client-side MCP tool allowlist |
 | `policy/mcp-compose.yaml` | hardened MCP server, workstation only |
 | `policy/sanitize-snapshot.mjs` | redaction and fencing of page content, with its limits under test |
 | `prompts/` | system prompts, versioned and reviewed like code |
 
-There are no model adapters here. This layer is what hardens an assistant working
-on the repository; it does not embed a client for a provider.
+There are no model adapters here, and no provider SDK. This layer hardens an
+assistant working on the repository and documents the postures; it does not embed
+a client for anyone.
+
+**The posture lives here and in `docs/`, never in `tests/`.** A directory per mode
+would mean either four suites to keep in sync or three empty folders, and it would
+make the central claim false: the suite cannot be identical across postures if the
+filesystem says there are four of them.
 
 ## Three things to know first
 

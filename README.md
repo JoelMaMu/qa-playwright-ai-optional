@@ -12,10 +12,20 @@ rm -rf ai/ && npm test   # identical result
 ## Why this exists
 
 Most "Playwright + AI" demos show an agent writing a test. The question teams
-actually face is different: **where does the trust boundary sit, and what does it
-cost to move it?**
+actually face is different, and it is usually asked in the wrong order:
 
-The answer here is one invariant, applied everywhere:
+> **Where does your trust boundary sit, and what are you willing to pay to move
+> it?**
+
+Four postures answer it, from no AI at all to a local model on your own hardware.
+Pick yours with [`docs/ai-posture.md`](docs/ai-posture.md), then read the
+operational detail in [`ai/profiles/`](ai/profiles/).
+
+**The suite in this repository was written under profile 0, without a model.** The
+other three are documented postures with a hardened MCP policy, not measured
+results. No comparative benchmark has been run, and none is claimed.
+
+That is possible because of one invariant, applied everywhere:
 
 > Generation modifies source code. Execution verifies it.
 > The two never share a runtime.
@@ -92,14 +102,20 @@ npm run typecheck
 ## Layout
 
 ```
-tests/     the suite. Zero AI dependency. This is the deliverable.
+docs/      choose a posture, then the threat model and the reusable policy
+ai/        the removable layer: one profile per posture, MCP policy, prompts
+tests/     the suite. One suite, zero AI dependency. This is the deliverable.
 sut/       pinned Juice Shop, deterministic seed, mutant catalogue
 metrics/   false-green harness and committed results
 tools/     healer-diff-gate, invisible-unicode-lint
-ai/        the removable layer: MCP hardening policy and prompts
 adr/       the four architecture decisions
-docs/      threat model and the security questions it answers
+scripts/   the static proof that the boundary holds
 ```
+
+The posture is documentation and configuration, never a directory of tests. Four
+copies of a suite could not be compared against each other, and the claim that
+removing AI changes nothing would be false the moment the filesystem said
+otherwise.
 
 ## What this repository does not do
 
