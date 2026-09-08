@@ -5,7 +5,7 @@
  * A repository can claim "no model is involved at execution time". This script
  * turns that claim into a property checked on every pull request. It rejects:
  *
- *   1. an import of `ai/` from the execution scope;
+ *   1. an import of `ai-engineering/` from the execution scope;
  *   2. a model provider environment variable read in that scope;
  *   3. a hard-coded provider endpoint in that scope;
  *   4. a CI workflow referencing a provider or starting an MCP server.
@@ -25,10 +25,10 @@ import { fileURLToPath } from 'node:url';
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
 /** Execution scope: what runs when `playwright test` runs. */
-const RUNTIME_SCOPE = ['tests', 'sut'];
+const RUNTIME_SCOPE = ['qa-automation/tests', 'qa-automation/sut'];
 const RUNTIME_FILES = ['playwright.config.ts'];
 
-const AI_IMPORT = /(?:from|import|require)\s*\(?\s*['"][^'"]*\bai\/(?:prompts|policy)\b/;
+const AI_IMPORT = /(?:from|import|require)\s*\(?\s*['"][^'"]*\bai-engineering\/(?:prompts|policy)\b/;
 
 const PROVIDER_ENV =
   /process\.env\.[A-Z_]*(?:OPENAI|ANTHROPIC|MISTRAL|OLLAMA|GEMINI|COHERE)[A-Z_]*/;
@@ -72,7 +72,7 @@ async function checkRuntimeFile(file) {
     // Only code is checked. Comments legitimately name providers, and a rule that
     // fires on prose is a rule the team ends up disabling.
     const code = text.replace(/\/\/.*$/, '').replace(/\/\*.*?\*\//g, '');
-    if (AI_IMPORT.test(code)) record(file, index + 1, 'import of ai/ in the execution scope', text);
+    if (AI_IMPORT.test(code)) record(file, index + 1, 'import of ai-engineering/ in the execution scope', text);
     if (PROVIDER_ENV.test(code)) record(file, index + 1, 'provider environment variable', text);
     if (PROVIDER_HOST.test(code)) record(file, index + 1, 'hard-coded provider endpoint', text);
   });
@@ -99,7 +99,7 @@ async function main() {
 
   if (violations.length === 0) {
     console.log('OK: the generation / execution boundary holds.');
-    console.log('    tests/ and sut/ reference neither ai/ nor any model provider.');
+    console.log('    qa-automation/ references neither ai-engineering/ nor any model provider.');
     console.log('    no workflow calls a model or starts an MCP server.');
     return;
   }

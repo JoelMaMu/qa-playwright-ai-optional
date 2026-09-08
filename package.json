@@ -9,22 +9,22 @@
     "node": ">=22.18.0"
   },
   "scripts": {
-    "sut:up": "docker compose -f sut/docker/compose.yaml up -d --wait",
-    "sut:down": "docker compose -f sut/docker/compose.yaml down -v",
-    "sut:seed": "node sut/seed/seed.mjs",
+    "sut:up": "docker compose -f qa-automation/sut/docker/compose.yaml up -d --wait",
+    "sut:down": "docker compose -f qa-automation/sut/docker/compose.yaml down -v",
+    "sut:seed": "node qa-automation/sut/seed/seed.mjs",
     "test": "playwright test --project=chromium",
     "test:all-browsers": "playwright test",
-    "test:smoke": "playwright test --project=chromium tests/specs/smoke",
-    "test:security": "playwright test --project=chromium tests/specs/security",
+    "test:smoke": "playwright test --project=chromium qa-automation/tests/specs/smoke",
+    "test:security": "playwright test --project=chromium qa-automation/tests/specs/security",
     "test:ui": "playwright test --ui",
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit",
-    "lint:unicode": "node tools/invisible-unicode-lint/bin/cli.mjs .",
-    "gate:healer": "node tools/healer-diff-gate/bin/cli.mjs --base origin/main",
+    "lint:unicode": "node ai-engineering/tools/invisible-unicode-lint/bin/cli.mjs .",
+    "gate:healer": "node qa-automation/tools/healer-diff-gate/bin/cli.mjs --base origin/main",
     "verify:no-ai": "node scripts/assert-no-ai-imports.mjs",
-    "test:unit": "node --test tools/**/__tests__/*.test.mjs ai/policy/__tests__/*.test.mjs",
-    "metrics:mutants": "node metrics/harness/run-mutants.mjs",
-    "mcp:up": "docker compose -f ai/policy/mcp-compose.yaml up"
+    "test:unit": "node --test qa-automation/tools/**/__tests__/*.test.mjs ai-engineering/tools/**/__tests__/*.test.mjs ai-engineering/policy/__tests__/*.test.mjs",
+    "metrics:mutants": "node qa-automation/metrics/harness/run-mutants.mjs",
+    "mcp:up": "docker compose -f ai-engineering/policy/mcp-compose.yaml up"
   },
   "devDependencies": {
     "@playwright/test": "1.62.1",

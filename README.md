@@ -5,9 +5,23 @@ dependency**, and where that boundary is enforced by CI rather than claimed in a
 README.
 
 ```bash
-npm run verify:no-ai     # fails if tests/ references ai/ or a model provider
-rm -rf ai/ && npm test   # identical result
+npm run verify:no-ai                  # fails if the suite references the AI layer
+rm -rf ai-engineering/ && npm test    # identical result
 ```
+
+## Three layers
+
+The repository is organised the way the decision actually gets made in a company.
+
+| Layer | Question it answers | Audience |
+|---|---|---|
+| [`ai-adoption/`](ai-adoption/) | Which AI posture, at what cost, and what will legal ask? | CTO, security team, QA lead |
+| [`ai-engineering/`](ai-engineering/) | How do we make an assistant safe and useful on this codebase? | whoever integrates the tooling |
+| [`qa-automation/`](qa-automation/) | Does the suite actually catch anything? | QA engineers, tech leads |
+
+**Looking for the code?** It is in
+[`qa-automation/tests/`](qa-automation/tests/), and it runs on Chromium, Firefox
+and WebKit.
 
 ## Why this exists
 
@@ -18,14 +32,14 @@ actually face is different, and it is usually asked in the wrong order:
 > it?**
 
 Four postures answer it, from no AI at all to a local model on your own hardware.
-Pick yours with [`docs/ai-posture.md`](docs/ai-posture.md), then read the
-operational detail in [`ai/profiles/`](ai/profiles/).
+Pick yours with [`ai-adoption/`](ai-adoption/), then read the operational detail in
+[`ai-adoption/profiles/`](ai-adoption/profiles/).
 
-**The suite in this repository was written under profile 0, without a model.** The
-other three are documented postures with a hardened MCP policy, not measured
-results. No comparative benchmark has been run, and none is claimed.
+**The suite here was written under profile 0, without a model.** The other three
+are documented postures with a hardened MCP policy, not measured results. No
+comparative benchmark has been run, and none is claimed.
 
-That is possible because of one invariant, applied everywhere:
+That separation is possible because of one invariant:
 
 > Generation modifies source code. Execution verifies it.
 > The two never share a runtime.
@@ -34,10 +48,10 @@ Consequences, enforced rather than stated:
 
 | Rule | Enforced by |
 |---|---|
-| CI never calls a model, never starts an MCP server | `scripts/assert-no-ai-imports.mjs`, run on every PR |
-| Nothing leaves the SUT during a run | `tests/fixtures/egress-guard.ts`, plus iptables in `airgap.yml` |
-| Generated patches cannot silently weaken the suite | `tools/healer-diff-gate/` |
-| Test data is synthetic and seeded | `sut/seed/seed.mjs`, ADR-0003 |
+| CI never calls a model, never starts an MCP server | `scripts/assert-no-ai-imports.mjs`, on every PR |
+| Nothing leaves the SUT during a run | the egress guard, plus iptables in `airgap.yml` |
+| Generated patches cannot silently weaken the suite | `qa-automation/tools/healer-diff-gate/` |
+| Test data is synthetic and seeded | `qa-automation/sut/seed/`, ADR-0003 |
 
 ## The measurement that matters
 
@@ -51,22 +65,20 @@ all reaches 100 % coverage.
 npm run metrics:mutants
 ```
 
-Latest measurement, 6 mutants, is committed in
-[`metrics/results/false-green.json`](metrics/results/false-green.json) and
-discussed in [`metrics/README.md`](metrics/README.md), including the two known
-coverage gaps it exposes.
+Results and the two coverage gaps they expose:
+[`qa-automation/metrics/`](qa-automation/metrics/).
 
 ## Two tools
 
 | Tool | What it does |
 |---|---|
-| [`tools/healer-diff-gate/`](tools/healer-diff-gate/) | rejects patches that turn a build green without repairing it: removed or weakened assertion, unapproved skip, inflated timeout |
-| [`tools/invisible-unicode-lint/`](tools/invisible-unicode-lint/) | finds instructions hidden in invisible Unicode inside the files your assistant reads and interprets |
+| [`healer-diff-gate`](qa-automation/tools/healer-diff-gate/) | rejects patches that turn a build green without repairing it: removed or weakened assertion, unapproved skip, inflated timeout |
+| [`invisible-unicode-lint`](ai-engineering/tools/invisible-unicode-lint/) | finds instructions hidden in invisible Unicode inside the files your assistant reads and interprets |
 
 The second addresses a real and rarely checked vector. `AGENTS.md`, `CLAUDE.md`,
-`.cursorrules` and `.github/*.prompt.md` are **executable code**, loaded every
-session. A zero-width instruction in them is invisible in a GitHub diff, invisible
-in an editor, and perfectly readable by the model.
+`.cursorrules` and `*.prompt.md` are **executable code**, loaded every session. A
+zero-width instruction in them is invisible in a GitHub diff, invisible in an
+editor, and perfectly readable by the model.
 
 ## Getting started
 
@@ -83,7 +95,7 @@ npm run report
 ```
 
 Requires Node >= 22.18 and Docker. `npm test` runs Chromium; use
-`npm run test:all-browsers` for Chromium, Firefox and WebKit, after
+`npm run test:all-browsers` for all three engines, after
 `npx playwright install --with-deps`.
 
 > **Warning.** The system under test is [OWASP Juice
@@ -95,27 +107,26 @@ Requires Node >= 22.18 and Docker. `npm test` runs Chromium; use
 ```bash
 npm run verify:no-ai     # the generation / execution boundary (ADR-0001, ADR-0002)
 npm run lint:unicode     # no hidden instruction in assistant-read files
-npm run test:unit        # tools and MCP policy layer
+npm run test:unit        # both tools and the MCP policy layer
 npm run typecheck
 ```
 
 ## Layout
 
 ```
-docs/      choose a posture, then the threat model and the reusable policy
-ai/        the removable layer: one profile per posture, MCP policy, prompts
-tests/     the suite. One suite, zero AI dependency. This is the deliverable.
-sut/       pinned Juice Shop, deterministic seed, mutant catalogue
-metrics/   false-green harness and committed results
-tools/     healer-diff-gate, invisible-unicode-lint
-adr/       the four architecture decisions
-scripts/   the static proof that the boundary holds
+ai-adoption/       choose a posture: decision tree, four profiles, reusable policy
+ai-engineering/    the removable layer: MCP hardening, prompts, threat model
+                   plus invisible-unicode-lint
+qa-automation/     the suite, the pinned SUT, the false-green harness
+                   plus healer-diff-gate
+adr/               the four architecture decisions
+scripts/           the static proof that the boundary holds
 ```
 
 The posture is documentation and configuration, never a directory of tests. Four
 copies of a suite could not be compared against each other, and the claim that
-removing AI changes nothing would be false the moment the filesystem said
-otherwise.
+removing the AI layer changes nothing would be false the moment the filesystem
+said there were four suites.
 
 ## What this repository does not do
 

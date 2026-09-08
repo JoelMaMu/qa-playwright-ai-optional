@@ -1,0 +1,37 @@
+{
+  "total": 6,
+  "missed": 2,
+  "rate": 0.3333333333333333,
+  "results": [
+    {
+      "id": "M-PRICE-001",
+      "description": "Unit price returned by the catalogue is lowered by 1.00.",
+      "detected": true
+    },
+    {
+      "id": "M-BASKET-002",
+      "description": "Basket quantity is capped at 1 regardless of how many are added.",
+      "detected": true
+    },
+    {
+      "id": "M-TOTAL-003",
+      "description": "Basket total ignores the last item.",
+      "detected": true
+    },
+    {
+      "id": "M-SEARCH-004",
+      "description": "Search returns only the first result.",
+      "detected": true
+    },
+    {
+      "id": "M-SESSION-005",
+      "description": "Profile API answers 200 with an empty body instead of 401 without a token.",
+      "detected": false
+    },
+    {
+      "id": "M-LATENCY-006",
+      "description": "Catalogue answers with 4 s of added latency.",
+      "detected": false
+    }
+  ]
+}

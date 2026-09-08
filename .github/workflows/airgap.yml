@@ -49,13 +49,13 @@ jobs:
       - name: Check 1, the generation / execution boundary holds
         run: npm run verify:no-ai
 
-      - name: Check 2, ai/ is genuinely removable
+      - name: Check 2, ai-engineering/ is genuinely removable
         run: |
           set -euo pipefail
-          rm -rf ai/
+          rm -rf ai-engineering/
           npm run typecheck
           npx --no-install playwright test --list --project=chromium | tail -3
-          git checkout -- ai/
+          git checkout -- ai-engineering/
 
       - name: Start the SUT
         run: npm run sut:up && npm run sut:seed

@@ -43,7 +43,7 @@ that can reject it.
 
 ### 2. The automated gate
 
-`tools/healer-diff-gate/` fails on a diff restricted to `tests/**/*.spec.ts`:
+`qa-automation/tools/healer-diff-gate/` fails on a diff restricted to `qa-automation/tests/**/*.spec.ts`:
 
 | Code | Rule |
 |---|---|
@@ -80,7 +80,7 @@ audits.
 
 The gate detects **syntactic** weakening. It does not detect a patch that
 correctly rewrites an assertion onto the wrong target. That gap is covered by the
-mutant catalogue (`sut/mutants/`), and there is a unit test documenting it.
+mutant catalogue (`qa-automation/sut/mutants/`), and there is a unit test documenting it.
 
 The protocol is before/after: measure the false-green rate, break the SUT, run the
 healer, merge, measure again. **If the rate went up, the healer degraded the
@@ -100,4 +100,4 @@ count, which is why they are counted.
 
 **Neutral.** The analysis is lexical, not semantic. `toHaveText('Total: 12.00')`
 and `toHaveText('Total: 21.00')` have exactly the same strength. This is a net
-with known mesh size, documented in `tools/healer-diff-gate/SPEC.md`.
+with known mesh size, documented in `qa-automation/tools/healer-diff-gate/SPEC.md`.

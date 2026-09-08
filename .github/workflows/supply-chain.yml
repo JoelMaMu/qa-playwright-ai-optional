@@ -81,7 +81,7 @@ jobs:
       - name: The SUT image is pinned by digest
         run: |
           set -euo pipefail
-          if ! grep -qE 'image:.*@sha256:[0-9a-f]{64}' sut/docker/compose.yaml; then
+          if ! grep -qE 'image:.*@sha256:[0-9a-f]{64}' qa-automation/sut/docker/compose.yaml; then
             echo "FAILED: the SUT image is not pinned by digest."
             exit 1
           fi

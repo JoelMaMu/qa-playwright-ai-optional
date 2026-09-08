@@ -10,7 +10,7 @@ const BASE_URL = process.env.SUT_BASE_URL ?? 'http://localhost:3000';
 const IS_CI = !!process.env.CI;
 
 export default defineConfig({
-  testDir: './tests/specs',
+  testDir: './qa-automation/tests/specs',
   outputDir: './test-results',
 
   forbidOnly: IS_CI,

@@ -28,17 +28,17 @@ runtime.**
 
 Concretely:
 
-1. `tests/` contains no import from `ai/`, no network call to a model provider,
+1. `qa-automation/tests/` contains no import from `ai-engineering/`, no network call to a model provider,
    and no model-related environment variable.
-2. Deleting `ai/` entirely must leave the suite working and produce an identical
+2. Deleting `ai-engineering/` entirely must leave the suite working and produce an identical
    result. Checked by `scripts/assert-no-ai-imports.mjs`.
 3. No Playwright configuration branches on the presence of AI tooling.
 
 ## Consequences
 
 **Positive.** The suite runs in an environment with no outbound network other than
-the SUT. A team that forbids AI can adopt `tests/` as is, with no code to strip.
-The `ai/` layer can move fast, with its own dependencies, without triggering a
+the SUT. A team that forbids AI can adopt `qa-automation/tests/` as is, with no code to strip.
+The `ai-engineering/` layer can move fast, with its own dependencies, without triggering a
 revalidation of the suite.
 
 **Negative.** We give up the capabilities that genuinely require a model at
@@ -50,7 +50,7 @@ human or a local agent repairs it, not CI.
 
 ```bash
 npm run verify:no-ai
-rm -rf ai/ && npm test
+rm -rf ai-engineering/ && npm test
 ```
 
 Both run on every pull request through `.github/workflows/airgap.yml`.

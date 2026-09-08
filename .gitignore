@@ -4,17 +4,17 @@ playwright-report/
 blob-report/
 .playwright-mcp/
 
-# metrics/results/false-green.json is COMMITTED on purpose: it is a measurement,
+# qa-automation/metrics/results/false-green.json is COMMITTED on purpose: it is a measurement,
 # not a run artifact. Its history is the history of the suite's health.
 
 # Session tokens. Never committed. See ADR-0002.
-tests/.auth/
+qa-automation/tests/.auth/
 storageState*.json
 
 .env
 .env.*
 !.env.example
-ai/policy/secrets.env
+ai-engineering/policy/secrets.env
 
 .DS_Store
 *.log

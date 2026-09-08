@@ -22,7 +22,7 @@ if every run starts from the same state.
 
 1. **No production data, ever, in any derived form.** No anonymised dump, no "a
    few real rows for testing", no screenshots of a real environment.
-2. **All data is generated**, from a fixed set declared in `tests/data/seed.ts`.
+2. **All data is generated**, from a fixed set declared in `qa-automation/tests/data/seed.ts`.
 3. **The seed is idempotent and replayable.** A test that leaves the SUT dirty is
    a bug in the test.
 4. **Test credentials are public and documented.** They are worthless outside the
@@ -38,7 +38,7 @@ Protection relies on a hierarchy, never on the third alone:
 1. **The secret does not exist.** Synthetic SUT, seeded data. The only barrier
    that cannot be worked around.
 2. **The secret is outside the agent's reach.** The MCP container is read-only
-   with minimal mounts; `tests/.auth/` and `.env*` are excluded.
+   with minimal mounts; `qa-automation/tests/.auth/` and `.env*` are excluded.
 3. **The secret is redacted if it shows up anyway.** Playwright MCP `--secrets`.
    Upstream calls this "a convenience and not a security feature": it is literal
    string substitution and fails as soon as the value is encoded or split.

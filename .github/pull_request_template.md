@@ -18,14 +18,14 @@ If assisted, the commit carries the trailer `Generated-By: <tool>@<model>@<versi
 ## If this PR touches assertions
 
 - [ ] No assertion removed
-- [ ] No assertion weakened (see `tools/healer-diff-gate/README.md`)
+- [ ] No assertion weakened (see `qa-automation/tools/healer-diff-gate/README.md`)
 - [ ] No `skip` / `fixme` / `expect.soft` added
 - [ ] No timeout raised
 
 Otherwise a `healer-gate:allow <CODE> - <reason>` annotation is present in the
 code, with a reason of at least 20 characters.
 
-## If this PR touches `.github/` or `ai/prompts/`
+## If this PR touches `.github/` or `ai-engineering/prompts/`
 
 > Those files are **executable code**: loaded and interpreted on every session.
 
