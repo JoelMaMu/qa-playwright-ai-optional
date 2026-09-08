@@ -72,8 +72,14 @@ jobs:
 
           sudo useradd --create-home airgapped
 
-          # The suite writes reports and artifacts into the workspace.
+          # The suite reads the checkout and writes artifacts into it, so the
+          # airgapped user needs the workspace readable and writable, AND every
+          # ancestor traversable: /home/runner is not world-traversable, and
+          # without the +x walk node reports the CLI as missing rather than as
+          # unreadable, which sends you looking for the wrong bug.
           sudo chmod -R a+rwX "$GITHUB_WORKSPACE"
+          d="$GITHUB_WORKSPACE"
+          while [ "$d" != "/" ]; do sudo chmod o+x "$d"; d=$(dirname "$d"); done
 
           # Outbound rules applied to that user only. Allowed: loopback (the SUT)
           # and the Docker bridge range. Everything else is logged, then rejected.
@@ -96,7 +102,10 @@ jobs:
           #
           # An air-gapped step must not go through a package manager.
           CLI="$GITHUB_WORKSPACE/node_modules/@playwright/test/cli.js"
-          test -f "$CLI" || { echo "Playwright CLI not found at $CLI"; exit 1; }
+          # Checked as the airgapped user, not as the runner: what matters is
+          # whether the user that will execute the suite can read it.
+          sudo -u airgapped test -r "$CLI" \
+            || { echo "airgapped cannot read $CLI"; ls -ld "$CLI"; exit 1; }
 
           sudo -u airgapped \
             env "PATH=$PATH" \
