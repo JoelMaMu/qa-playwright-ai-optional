@@ -83,11 +83,17 @@ jobs:
             -j LOG --log-prefix 'AIRGAP-VIOLATION: '
           sudo iptables -A OUTPUT -m owner --uid-owner airgapped -j REJECT
 
+          # The local binary directly, never npx. Even with --no-install, npx
+          # resolves the package spec against registry.npmjs.org, and the
+          # airgapped user has no npm cache in its own HOME. The first run of
+          # this job caught exactly that: 24 rejected connections to Cloudflare
+          # addresses, all of them npm, none of them the suite. An air-gapped
+          # step must not go through a package manager.
           sudo -u airgapped \
             env "PATH=$PATH" \
                 "PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH" \
                 "SUT_EXTERNAL=1" \
-            npx --no-install playwright test --project=chromium
+            node_modules/.bin/playwright test --project=chromium
 
       - name: Check 4, no egress violation was logged
         if: ${{ !cancelled() }}
