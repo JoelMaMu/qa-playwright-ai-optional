@@ -1,8 +1,16 @@
 # qa-playwright-ai-optional
 
+[![ci](https://github.com/JoelMaMu/qa-playwright-ai-optional/actions/workflows/ci.yml/badge.svg)](https://github.com/JoelMaMu/qa-playwright-ai-optional/actions/workflows/ci.yml)
+[![airgap proof](https://github.com/JoelMaMu/qa-playwright-ai-optional/actions/workflows/airgap.yml/badge.svg)](https://github.com/JoelMaMu/qa-playwright-ai-optional/actions/workflows/airgap.yml)
+[![supply chain](https://github.com/JoelMaMu/qa-playwright-ai-optional/actions/workflows/supply-chain.yml/badge.svg)](https://github.com/JoelMaMu/qa-playwright-ai-optional/actions/workflows/supply-chain.yml)
+
 A Playwright end-to-end suite where **AI is a source-time tool, never a runtime
 dependency**, and where that boundary is enforced by CI rather than claimed in a
 README.
+
+The middle badge is the one that matters: it runs the suite under a user whose
+outbound traffic is rejected by iptables, and fails if a single connection is
+attempted.
 
 ```bash
 npm run verify:no-ai                  # fails if the suite references the AI layer
